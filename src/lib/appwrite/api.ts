@@ -1,6 +1,6 @@
-import { INewUser } from "@/types";
+import { INewUser, ISignInCredentials } from "@/types";
 import { account, appwriteConfig, avatars, databases } from "./config";
-import { ID } from "appwrite";
+import { ID, Query } from "appwrite";
 
 export async function createUserAccount(user: INewUser) {
   try {
@@ -49,5 +49,44 @@ export async function saveUserToDB(user: {
   } catch (error) {
     console.log(error);
     return error;
+  }
+}
+
+export async function signInAccount(user: ISignInCredentials) {
+  try {
+    const session = await account.createEmailPasswordSession(
+      user.email,
+      user.password
+    );
+    return session;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+}
+
+export async function getCurrentUser() {
+  try {
+    const currentAccount = await account.get();
+
+    if (!currentAccount) {
+      throw Error("Unable to get session object.");
+    }
+
+    const currentUser = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.usersCollectionId,
+      []
+    );
+    //Query.equal("accountId", currentAccount.$id)
+
+    if (!currentUser) {
+      throw Error("Unable to get user data.");
+    }
+
+    return currentUser.documents[0];
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 }
